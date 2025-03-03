@@ -1,0 +1,51 @@
+<%- include('partials/header') %>
+
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">Profile</h2>
+      </div>
+      <div class="card-body">
+        <div id="profileAlert" class="alert d-none" role="alert"></div>
+        
+        <div id="profileContent" class="d-none">
+          <div class="row mb-4">
+            <div class="col-md-4 text-md-end">
+              <strong>Name:</strong>
+            </div>
+            <div class="col-md-8" id="profileName"></div>
+          </div>
+          
+          <div class="row mb-4">
+            <div class="col-md-4 text-md-end">
+              <strong>Email:</strong>
+            </div>
+            <div class="col-md-8" id="profileEmail"></div>
+          </div>
+          
+          <div class="row mb-4">
+            <div class="col-md-4 text-md-end">
+              <strong>Account Created:</strong>
+            </div>
+            <div class="col-md-8" id="profileCreated"></div>
+          </div>
+        </div>
+        
+        <div id="profileLoading" class="text-center">
+          <p>Loading profile information...</p>
+        </div>
+        
+        <div id="profileNotLoggedIn" class="d-none">
+          <p class="text-center">You need to be logged in to view your profile.</p>
+          <div class="d-flex justify-content-center gap-2">
+            <a href="/login" class="btn btn-primary">Login</a>
+            <a href="/register" class="btn btn-outline-primary">Register</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

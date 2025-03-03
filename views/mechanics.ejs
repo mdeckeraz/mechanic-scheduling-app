@@ -1,0 +1,153 @@
+<%- include('partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-8">
+    <h2>Mechanics</h2>
+  </div>
+  <div class="col-md-4 text-end">
+    <a href="/mechanics/add" class="btn btn-primary">Add Mechanic</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div id="mechanicsAlert" class="alert d-none" role="alert"></div>
+    
+    <div id="mechanicsLoading" class="text-center">
+      <p>Loading mechanics...</p>
+    </div>
+    
+    <div id="mechanicsList" class="d-none">
+      <div class="table-responsive">
+        <table class="table table-striped table-hover">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Specialties</th>
+              <th>Experience</th>
+              <th>Rating</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="mechanicsTableBody">
+            <!-- Mechanics will be loaded here dynamically -->
+          </tbody>
+        </table>
+      </div>
+      <div id="noMechanics" class="text-center d-none">
+        <p>No mechanics found. <a href="/mechanics/add">Add a mechanic</a> to get started.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+    
+    loadMechanics();
+    
+    async function loadMechanics() {
+      try {
+        const response = await fetch('/api/mechanics', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('mechanicsLoading').classList.add('d-none');
+        document.getElementById('mechanicsList').classList.remove('d-none');
+        
+        if (data.success && data.data.length > 0) {
+          const tableBody = document.getElementById('mechanicsTableBody');
+          tableBody.innerHTML = '';
+          
+          data.data.forEach(mechanic => {
+            const row = document.createElement('tr');
+            
+            row.innerHTML = `
+              <td>${mechanic.user ? mechanic.user.name : 'N/A'}</td>
+              <td>${mechanic.user ? mechanic.user.email : 'N/A'}</td>
+              <td>${mechanic.specialties.join(', ')}</td>
+              <td>${mechanic.experience} years</td>
+              <td>${mechanic.rating}/5</td>
+              <td>
+                <span class="badge ${mechanic.isAvailable ? 'bg-success' : 'bg-danger'}">
+                  ${mechanic.isAvailable ? 'Available' : 'Unavailable'}
+                </span>
+              </td>
+              <td>
+                <a href="/mechanics/${mechanic._id}" class="btn btn-sm btn-info">View</a>
+                <button class="btn btn-sm btn-danger delete-mechanic" data-id="${mechanic._id}">Delete</button>
+              </td>
+            `;
+            
+            tableBody.appendChild(row);
+          });
+          
+          // Add event listeners for delete buttons
+          document.querySelectorAll('.delete-mechanic').forEach(button => {
+            button.addEventListener('click', async (e) => {
+              if (confirm('Are you sure you want to delete this mechanic?')) {
+                const mechanicId = e.target.getAttribute('data-id');
+                await deleteMechanic(mechanicId);
+              }
+            });
+          });
+        } else {
+          document.getElementById('noMechanics').classList.remove('d-none');
+        }
+      } catch (error) {
+        console.error('Load mechanics error:', error);
+        showAlert('mechanicsAlert', 'An error occurred while loading mechanics', 'danger');
+      }
+    }
+    
+    async function deleteMechanic(id) {
+      try {
+        const response = await fetch(`/api/mechanics/${id}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showAlert('mechanicsAlert', 'Mechanic deleted successfully', 'success');
+          loadMechanics();
+        } else {
+          showAlert('mechanicsAlert', data.message || 'Failed to delete mechanic', 'danger');
+        }
+      } catch (error) {
+        console.error('Delete mechanic error:', error);
+        showAlert('mechanicsAlert', 'An error occurred while deleting the mechanic', 'danger');
+      }
+    }
+    
+    function showAlert(elementId, message, type) {
+      const alertElement = document.getElementById(elementId);
+      if (alertElement) {
+        alertElement.textContent = message;
+        alertElement.className = `alert alert-${type}`;
+        alertElement.classList.remove('d-none');
+        
+        setTimeout(() => {
+          alertElement.classList.add('d-none');
+        }, 5000);
+      }
+    }
+  });
+</script>

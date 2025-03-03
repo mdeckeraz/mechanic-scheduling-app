@@ -1,0 +1,244 @@
+<%- include('partials/header') %>
+
+<div class="row justify-content-center mb-4">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">Auto Mechanic Scheduler</h2>
+      </div>
+      <div class="card-body">
+        <div id="welcomeMessage">
+          <p class="lead">Welcome to the Auto Mechanic Scheduler - a comprehensive system for scheduling and managing automotive service jobs.</p>
+          <p>Please register or login to get started.</p>
+          <div class="d-flex gap-2">
+            <a href="/register" class="btn btn-primary">Register</a>
+            <a href="/login" class="btn btn-outline-primary">Login</a>
+          </div>
+        </div>
+        
+        <div id="userWelcome" class="d-none">
+          <h3>Welcome, <span id="userName"></span>!</h3>
+          <p>You are now logged in to your account. Use the dashboard below to manage mechanics and jobs.</p>
+          
+          <div class="row mt-4">
+            <div class="col-md-4">
+              <div class="card text-center mb-3">
+                <div class="card-body">
+                  <h5 class="card-title">Calendar</h5>
+                  <p class="card-text">View and manage the scheduling calendar</p>
+                  <a href="/calendar" class="btn btn-primary">Open Calendar</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card text-center mb-3">
+                <div class="card-body">
+                  <h5 class="card-title">Mechanics</h5>
+                  <p class="card-text">Manage your mechanics and their specialties</p>
+                  <a href="/mechanics" class="btn btn-primary">Manage Mechanics</a>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card text-center mb-3">
+                <div class="card-body">
+                  <h5 class="card-title">Jobs</h5>
+                  <p class="card-text">View and schedule service jobs</p>
+                  <a href="/jobs" class="btn btn-primary">Manage Jobs</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="dashboardContent" class="d-none">
+  <div class="row">
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h3 class="mb-0">Today's Jobs</h3>
+          <a href="/jobs/add" class="btn btn-light btn-sm">Schedule New Job</a>
+        </div>
+        <div class="card-body">
+          <div id="todayJobsLoading" class="text-center">
+            <p>Loading today's jobs...</p>
+          </div>
+          
+          <div id="todayJobsList" class="d-none">
+            <div class="list-group" id="todayJobs">
+              <!-- Today's jobs will be loaded here dynamically -->
+            </div>
+            <div id="noTodayJobs" class="text-center mt-3 d-none">
+              <p>No jobs scheduled for today.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-md-6">
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+          <h3 class="mb-0">Available Mechanics</h3>
+          <a href="/mechanics/add" class="btn btn-light btn-sm">Add Mechanic</a>
+        </div>
+        <div class="card-body">
+          <div id="availableMechanicsLoading" class="text-center">
+            <p>Loading available mechanics...</p>
+          </div>
+          
+          <div id="availableMechanicsList" class="d-none">
+            <div class="list-group" id="availableMechanics">
+              <!-- Available mechanics will be loaded here dynamically -->
+            </div>
+            <div id="noAvailableMechanics" class="text-center mt-3 d-none">
+              <p>No mechanics available at the moment.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    
+    if (token) {
+      document.getElementById('dashboardContent').classList.remove('d-none');
+      loadTodayJobs();
+      loadAvailableMechanics();
+    }
+    
+    async function loadTodayJobs() {
+      try {
+        // Get today's date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const tomorrow = new Date(today);
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        
+        const response = await fetch(`/api/jobs?startDate=${today.toISOString()}&endDate=${tomorrow.toISOString()}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('todayJobsLoading').classList.add('d-none');
+        document.getElementById('todayJobsList').classList.remove('d-none');
+        
+        if (data.success && data.data.length > 0) {
+          const jobsList = document.getElementById('todayJobs');
+          jobsList.innerHTML = '';
+          
+          data.data.forEach(job => {
+            const startTime = new Date(job.startTime);
+            
+            const jobItem = document.createElement('a');
+            jobItem.href = `/jobs/${job._id}`;
+            jobItem.className = 'list-group-item list-group-item-action';
+            
+            const statusBadge = getStatusBadgeClass(job.status);
+            
+            jobItem.innerHTML = `
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">${job.serviceType}</h5>
+                <small>${formatTime(startTime)}</small>
+              </div>
+              <p class="mb-1">${job.customer.name} - ${job.vehicle.make} ${job.vehicle.model}</p>
+              <div class="d-flex justify-content-between align-items-center">
+                <small>${job.mechanic ? job.mechanic.user.name : 'Unassigned'}</small>
+                <span class="badge ${statusBadge}">${job.status}</span>
+              </div>
+            `;
+            
+            jobsList.appendChild(jobItem);
+          });
+        } else {
+          document.getElementById('noTodayJobs').classList.remove('d-none');
+        }
+      } catch (error) {
+        console.error('Load today jobs error:', error);
+        document.getElementById('todayJobsLoading').classList.add('d-none');
+        document.getElementById('noTodayJobs').classList.remove('d-none');
+      }
+    }
+    
+    async function loadAvailableMechanics() {
+      try {
+        const response = await fetch('/api/mechanics?isAvailable=true', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('availableMechanicsLoading').classList.add('d-none');
+        document.getElementById('availableMechanicsList').classList.remove('d-none');
+        
+        if (data.success && data.data.length > 0) {
+          const mechanicsList = document.getElementById('availableMechanics');
+          mechanicsList.innerHTML = '';
+          
+          data.data.forEach(mechanic => {
+            const mechanicItem = document.createElement('a');
+            mechanicItem.href = `/mechanics/${mechanic._id}`;
+            mechanicItem.className = 'list-group-item list-group-item-action';
+            
+            mechanicItem.innerHTML = `
+              <div class="d-flex w-100 justify-content-between">
+                <h5 class="mb-1">${mechanic.user ? mechanic.user.name : 'Unknown'}</h5>
+                <small>${mechanic.experience} years exp.</small>
+              </div>
+              <p class="mb-1">Specialties: ${mechanic.specialties.join(', ')}</p>
+              <small>Rating: ${mechanic.rating}/5</small>
+            `;
+            
+            mechanicsList.appendChild(mechanicItem);
+          });
+        } else {
+          document.getElementById('noAvailableMechanics').classList.remove('d-none');
+        }
+      } catch (error) {
+        console.error('Load available mechanics error:', error);
+        document.getElementById('availableMechanicsLoading').classList.add('d-none');
+        document.getElementById('noAvailableMechanics').classList.remove('d-none');
+      }
+    }
+    
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      });
+    }
+    
+    function getStatusBadgeClass(status) {
+      switch (status) {
+        case 'Scheduled':
+          return 'bg-primary';
+        case 'In Progress':
+          return 'bg-warning';
+        case 'Completed':
+          return 'bg-success';
+        case 'Cancelled':
+          return 'bg-danger';
+        default:
+          return 'bg-secondary';
+      }
+    }
+  });
+</script>

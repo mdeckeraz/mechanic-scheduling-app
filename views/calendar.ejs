@@ -1,0 +1,451 @@
+<%- include('partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-8">
+    <h2>Scheduling Calendar</h2>
+  </div>
+  <div class="col-md-4 text-end">
+    <a href="/jobs/add" class="btn btn-primary">Schedule New Job</a>
+  </div>
+</div>
+
+<div class="row mb-4">
+  <div class="col-md-12">
+    <div class="card">
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="mechanicFilter" class="form-label">Filter by Mechanic</label>
+              <select class="form-select" id="mechanicFilter">
+                <option value="all">All Mechanics</option>
+                <!-- Mechanics will be loaded here dynamically -->
+              </select>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="mb-3">
+              <label for="viewType" class="form-label">Calendar View</label>
+              <select class="form-select" id="viewType">
+                <option value="dayGridMonth">Month</option>
+                <option value="timeGridWeek" selected>Week</option>
+                <option value="timeGridDay">Day</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    <div id="calendarAlert" class="alert d-none" role="alert"></div>
+    
+    <div id="calendarLoading" class="text-center">
+      <p>Loading calendar...</p>
+    </div>
+    
+    <div id="calendar" class="d-none"></div>
+  </div>
+</div>
+
+<!-- Job Details Modal -->
+<div class="modal fade" id="jobModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalJobTitle">Job Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <div id="modalJobLoading" class="text-center">
+          <p>Loading job details...</p>
+        </div>
+        
+        <div id="modalJobDetails" class="d-none">
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <h6>Customer</h6>
+              <p id="modalCustomerName"></p>
+              <p id="modalCustomerContact"></p>
+            </div>
+            <div class="col-md-6">
+              <h6>Vehicle</h6>
+              <p id="modalVehicleInfo"></p>
+              <p id="modalVehicleVin"></p>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <h6>Service</h6>
+              <p id="modalServiceType"></p>
+              <p>
+                <span id="modalJobStatus" class="badge"></span>
+              </p>
+            </div>
+            <div class="col-md-6">
+              <h6>Schedule</h6>
+              <p id="modalJobTime"></p>
+              <p id="modalJobDuration"></p>
+            </div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <h6>Assigned Mechanic</h6>
+              <p id="modalMechanicName"></p>
+            </div>
+          </div>
+          
+          <div class="row mb-3" id="jobStatusActions">
+            <div class="col-md-12">
+              <h6>Actions</h6>
+              <div class="btn-group">
+                <button type="button" class="btn btn-outline-primary job-status-btn" data-status="Scheduled">Mark Scheduled</button>
+                <button type="button" class="btn btn-outline-warning job-status-btn" data-status="In Progress">Mark In Progress</button>
+                <button type="button" class="btn btn-outline-success job-status-btn" data-status="Completed">Mark Completed</button>
+                <button type="button" class="btn btn-outline-danger job-status-btn" data-status="Cancelled">Mark Cancelled</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <a href="#" id="viewJobBtn" class="btn btn-primary">View Full Details</a>
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+<script src="/js/calendar.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+    
+    // Bootstrap modal instance
+    const jobModal = new bootstrap.Modal(document.getElementById('jobModal'));
+    
+    // Load mechanics for filter
+    loadMechanics();
+    
+    // Initialize calendar
+    const calendarEl = document.getElementById('calendar');
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'timeGridWeek',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,timeGridDay'
+      },
+      slotMinTime: '08:00:00',
+      slotMaxTime: '19:00:00',
+      allDaySlot: false,
+      height: 'auto',
+      expandRows: true,
+      slotDuration: '00:30:00',
+      slotLabelInterval: '01:00',
+      slotLabelFormat: {
+        hour: 'numeric',
+        minute: '2-digit',
+        omitZeroMinute: false,
+        meridiem: 'short'
+      },
+      eventTimeFormat: {
+        hour: 'numeric',
+        minute: '2-digit',
+        meridiem: 'short'
+      },
+      nowIndicator: true,
+      businessHours: {
+        daysOfWeek: [0, 1, 2, 3, 4, 5, 6],
+        startTime: '08:00',
+        endTime: '19:00'
+      },
+      eventClick: function(info) {
+        showJobDetails(info.event.id);
+      },
+      eventDidMount: function(info) {
+        // Add tooltip
+        const tooltip = new bootstrap.Tooltip(info.el, {
+          title: `${info.event.title} - ${info.event.extendedProps.customer}`,
+          placement: 'top',
+          trigger: 'hover',
+          container: 'body'
+        });
+      },
+      events: function(info, successCallback, failureCallback) {
+        loadJobs(info.start, info.end, successCallback, failureCallback);
+      }
+    });
+    
+    // Expose calendar instance
+    calendarEl._calendar = calendar;
+    
+    // Render calendar
+    document.getElementById('calendarLoading').classList.add('d-none');
+    document.getElementById('calendar').classList.remove('d-none');
+    calendar.render();
+    
+    // Set up filter event listeners
+    document.getElementById('mechanicFilter').addEventListener('change', () => {
+      calendar.refetchEvents();
+    });
+    
+    document.getElementById('viewType').addEventListener('change', (e) => {
+      calendar.changeView(e.target.value);
+    });
+    
+    async function loadMechanics() {
+      try {
+        const response = await fetch('/api/mechanics', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.data.length > 0) {
+          const mechanicFilter = document.getElementById('mechanicFilter');
+          
+          data.data.forEach(mechanic => {
+            const option = document.createElement('option');
+            option.value = mechanic._id;
+            option.textContent = mechanic.user ? mechanic.user.name : 'Unknown';
+            mechanicFilter.appendChild(option);
+          });
+        }
+      } catch (error) {
+        console.error('Load mechanics error:', error);
+        showAlert('calendarAlert', 'An error occurred while loading mechanics', 'danger');
+      }
+    }
+    
+    async function loadJobs(start, end, successCallback, failureCallback) {
+      try {
+        const mechanicFilter = document.getElementById('mechanicFilter').value;
+        
+        // Build query parameters
+        let queryParams = [
+          `startDate=${start.toISOString()}`,
+          `endDate=${end.toISOString()}`
+        ];
+        
+        if (mechanicFilter !== 'all') {
+          queryParams.push(`mechanicId=${mechanicFilter}`);
+        }
+        
+        // Build the URL
+        const url = `/api/jobs?${queryParams.join('&')}`;
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          const events = data.data.map(job => {
+            const statusColors = {
+              'Scheduled': '#0d6efd',
+              'In Progress': '#ffc107',
+              'Completed': '#198754',
+              'Cancelled': '#dc3545'
+            };
+            
+            return {
+              id: job._id,
+              title: job.serviceType,
+              start: job.startTime,
+              end: job.endTime,
+              backgroundColor: statusColors[job.status] || '#6c757d',
+              borderColor: statusColors[job.status] || '#6c757d',
+              extendedProps: {
+                customer: job.customer.name,
+                vehicle: `${job.vehicle.make} ${job.vehicle.model}`,
+                status: job.status,
+                mechanic: job.mechanic ? job.mechanic.user.name : 'Unassigned'
+              }
+            };
+          });
+          
+          successCallback(events);
+        } else {
+          failureCallback(new Error(data.message || 'Failed to load jobs'));
+          showAlert('calendarAlert', data.message || 'Failed to load jobs', 'danger');
+        }
+      } catch (error) {
+        console.error('Load jobs error:', error);
+        failureCallback(error);
+        showAlert('calendarAlert', 'An error occurred while loading jobs', 'danger');
+      }
+    }
+    
+    async function showJobDetails(jobId) {
+      try {
+        // Reset modal
+        document.getElementById('modalJobLoading').classList.remove('d-none');
+        document.getElementById('modalJobDetails').classList.add('d-none');
+        document.getElementById('viewJobBtn').href = `/jobs/${jobId}`;
+        
+        // Set up status buttons
+        const statusButtons = document.querySelectorAll('.job-status-btn');
+        statusButtons.forEach(btn => {
+          btn.dataset.jobId = jobId;
+        });
+        
+        // Show modal
+        jobModal.show();
+        
+        const response = await fetch(`/api/jobs/${jobId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('modalJobLoading').classList.add('d-none');
+        
+        if (data.success) {
+          const job = data.data;
+          
+          // Set modal content
+          document.getElementById('modalJobTitle').textContent = `${job.serviceType}`;
+          document.getElementById('modalCustomerName').textContent = job.customer.name;
+          document.getElementById('modalCustomerContact').textContent = `${job.customer.email} | ${job.customer.phone}`;
+          document.getElementById('modalVehicleInfo').textContent = `${job.vehicle.make} ${job.vehicle.model} (${job.vehicle.year})`;
+          document.getElementById('modalVehicleVin').textContent = `VIN: ${job.vehicle.vin}`;
+          document.getElementById('modalServiceType').textContent = job.serviceType;
+          
+          const statusBadge = document.getElementById('modalJobStatus');
+          statusBadge.textContent = job.status;
+          statusBadge.className = `badge ${getStatusBadgeClass(job.status)}`;
+          
+          const startTime = new Date(job.startTime);
+          const endTime = new Date(job.endTime);
+          
+          document.getElementById('modalJobTime').textContent = `${formatDate(startTime)} ${formatTime(startTime)} - ${formatTime(endTime)}`;
+          
+          // Calculate duration in hours
+          const durationMs = endTime - startTime;
+          const durationHours = durationMs / (1000 * 60 * 60);
+          document.getElementById('modalJobDuration').textContent = `Duration: ${durationHours} hour${durationHours !== 1 ? 's' : ''}`;
+          
+          document.getElementById('modalMechanicName').textContent = job.mechanic ? 
+            `${job.mechanic.user.name} (${job.mechanic.specialties.join(', ')})` : 
+            'Unassigned';
+          
+          // Highlight the current status button
+          statusButtons.forEach(btn => {
+            if (btn.dataset.status === job.status) {
+              btn.classList.remove('btn-outline-primary', 'btn-outline-warning', 'btn-outline-success', 'btn-outline-danger');
+              
+              switch (job.status) {
+                case 'Scheduled':
+                  btn.classList.add('btn-primary');
+                  break;
+                case 'In Progress':
+                  btn.classList.add('btn-warning');
+                  break;
+                case 'Completed':
+                  btn.classList.add('btn-success');
+                  break;
+                case 'Cancelled':
+                  btn.classList.add('btn-danger');
+                  break;
+              }
+            } else {
+              // Reset other buttons
+              btn.className = 'btn job-status-btn';
+              
+              switch (btn.dataset.status) {
+                case 'Scheduled':
+                  btn.classList.add('btn-outline-primary');
+                  break;
+                case 'In Progress':
+                  btn.classList.add('btn-outline-warning');
+                  break;
+                case 'Completed':
+                  btn.classList.add('btn-outline-success');
+                  break;
+                case 'Cancelled':
+                  btn.classList.add('btn-outline-danger');
+                  break;
+              }
+            }
+          });
+          
+          document.getElementById('modalJobDetails').classList.remove('d-none');
+        } else {
+          showAlert('calendarAlert', data.message || 'Failed to load job details', 'danger');
+          jobModal.hide();
+        }
+      } catch (error) {
+        console.error('Show job details error:', error);
+        showAlert('calendarAlert', 'An error occurred while loading job details', 'danger');
+        jobModal.hide();
+      }
+    }
+    
+    function formatDate(date) {
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+    
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      });
+    }
+    
+    function getStatusBadgeClass(status) {
+      switch (status) {
+        case 'Scheduled':
+          return 'bg-primary';
+        case 'In Progress':
+          return 'bg-warning';
+        case 'Completed':
+          return 'bg-success';
+        case 'Cancelled':
+          return 'bg-danger';
+        default:
+          return 'bg-secondary';
+      }
+    }
+    
+    function showAlert(elementId, message, type) {
+      const alertElement = document.getElementById(elementId);
+      if (alertElement) {
+        alertElement.textContent = message;
+        alertElement.className = `alert alert-${type}`;
+        alertElement.classList.remove('d-none');
+        
+        setTimeout(() => {
+          alertElement.classList.add('d-none');
+        }, 5000);
+      }
+    }
+  });
+</script>

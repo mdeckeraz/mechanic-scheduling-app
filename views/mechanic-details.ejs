@@ -1,0 +1,405 @@
+<%- include('partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-12">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/mechanics">Mechanics</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Mechanic Details</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-8">
+    <div class="card mb-4">
+      <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h2 class="mb-0" id="mechanicName">Mechanic Details</h2>
+        <button class="btn btn-light btn-sm" id="editMechanicBtn">Edit</button>
+      </div>
+      <div class="card-body">
+        <div id="mechanicAlert" class="alert d-none" role="alert"></div>
+        
+        <div id="mechanicLoading" class="text-center">
+          <p>Loading mechanic details...</p>
+        </div>
+        
+        <div id="mechanicDetails" class="d-none">
+          <div class="row mb-3">
+            <div class="col-md-4 fw-bold">Name:</div>
+            <div class="col-md-8" id="detailName"></div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4 fw-bold">Email:</div>
+            <div class="col-md-8" id="detailEmail"></div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4 fw-bold">Specialties:</div>
+            <div class="col-md-8" id="detailSpecialties"></div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4 fw-bold">Experience:</div>
+            <div class="col-md-8"><span id="detailExperience"></span> years</div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4 fw-bold">Rating:</div>
+            <div class="col-md-8"><span id="detailRating"></span>/5</div>
+          </div>
+          
+          <div class="row mb-3">
+            <div class="col-md-4 fw-bold">Status:</div>
+            <div class="col-md-8">
+              <span id="detailStatus" class="badge"></span>
+              <button id="toggleStatusBtn" class="btn btn-sm ms-2"></button>
+            </div>
+          </div>
+        </div>
+        
+        <div id="mechanicEditForm" class="d-none">
+          <form id="editMechanicForm">
+            <div class="mb-3">
+              <label class="form-label">Specialties</label>
+              <div class="row">
+                <div class="col-md-4">
+                  <div class="form-check">
+                    <input class="form-check-input edit-specialty" type="checkbox" value="Engine" id="editEngineSpecialty">
+                    <label class="form-check-label" for="editEngineSpecialty">Engine</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input edit-specialty" type="checkbox" value="Transmission" id="editTransmissionSpecialty">
+                    <label class="form-check-label" for="editTransmissionSpecialty">Transmission</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input edit-specialty" type="checkbox" value="Brakes" id="editBrakesSpecialty">
+                    <label class="form-check-label" for="editBrakesSpecialty">Brakes</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-check">
+                    <input class="form-check-input edit-specialty" type="checkbox" value="Suspension" id="editSuspensionSpecialty">
+                    <label class="form-check-label" for="editSuspensionSpecialty">Suspension</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input edit-specialty" type="checkbox" value="Electrical" id="editElectricalSpecialty">
+                    <label class="form-check-label" for="editElectricalSpecialty">Electrical</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input edit-specialty" type="checkbox" value="Body Work" id="editBodyWorkSpecialty">
+                    <label class="form-check-label" for="editBodyWorkSpecialty">Body Work</label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <div class="form-check">
+                    <input class="form-check-input edit-specialty" type="checkbox" value="Interior" id="editInteriorSpecialty">
+                    <label class="form-check-label" for="editInteriorSpecialty">Interior</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input edit-specialty" type="checkbox" value="Tires" id="editTiresSpecialty">
+                    <label class="form-check-label" for="editTiresSpecialty">Tires</label>
+                  </div>
+                  <div class="form-check">
+                    <input class="form-check-input edit-specialty" type="checkbox" value="General" id="editGeneralSpecialty">
+                    <label class="form-check-label" for="editGeneralSpecialty">General</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div class="mb-3">
+              <label for="editExperience" class="form-label">Years of Experience</label>
+              <input type="number" class="form-control" id="editExperience" name="experience" min="0">
+            </div>
+            
+            <div class="mb-3">
+              <label for="editRating" class="form-label">Rating (1-5)</label>
+              <input type="number" class="form-control" id="editRating" name="rating" min="1" max="5" step="0.5">
+            </div>
+            
+            <div class="mb-3">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="editIsAvailable">
+                <label class="form-check-label" for="editIsAvailable">Available for Jobs</label>
+              </div>
+            </div>
+            
+            <button type="submit" class="btn btn-primary">Save Changes</button>
+            <button type="button" id="cancelEditBtn" class="btn btn-secondary">Cancel</button>
+          </form>
+        </div>
+        
+        <div id="mechanicNotFound" class="d-none">
+          <p class="text-center">Mechanic not found. <a href="/mechanics">Return to mechanics list</a>.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h3 class="mb-0">Upcoming Jobs</h3>
+      </div>
+      <div class="card-body">
+        <div id="jobsLoading" class="text-center">
+          <p>Loading jobs...</p>
+        </div>
+        
+        <div id="mechanicJobs" class="d-none">
+          <ul class="list-group" id="jobsList">
+            <!-- Jobs will be loaded here dynamically -->
+          </ul>
+          <div id="noJobs" class="text-center mt-3 d-none">
+            <p>No upcoming jobs scheduled for this mechanic.</p>
+            <a href="/jobs/add" class="btn btn-sm btn-primary">Schedule a Job</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+    
+    const mechanicId = '<%= mechanicId %>';
+    let mechanicData = null;
+    
+    loadMechanicDetails();
+    loadMechanicJobs();
+    
+    // Toggle between view and edit modes
+    document.getElementById('editMechanicBtn').addEventListener('click', () => {
+      document.getElementById('mechanicDetails').classList.add('d-none');
+      document.getElementById('mechanicEditForm').classList.remove('d-none');
+      
+      // Populate form with current values
+      document.querySelectorAll('.edit-specialty').forEach(checkbox => {
+        checkbox.checked = mechanicData.specialties.includes(checkbox.value);
+      });
+      
+      document.getElementById('editExperience').value = mechanicData.experience;
+      document.getElementById('editRating').value = mechanicData.rating;
+      document.getElementById('editIsAvailable').checked = mechanicData.isAvailable;
+    });
+    
+    document.getElementById('cancelEditBtn').addEventListener('click', () => {
+      document.getElementById('mechanicEditForm').classList.add('d-none');
+      document.getElementById('mechanicDetails').classList.remove('d-none');
+    });
+    
+    // Handle edit form submission
+    document.getElementById('editMechanicForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const specialties = Array.from(document.querySelectorAll('.edit-specialty:checked')).map(cb => cb.value);
+      const experience = document.getElementById('editExperience').value;
+      const rating = document.getElementById('editRating').value;
+      const isAvailable = document.getElementById('editIsAvailable').checked;
+      
+      if (specialties.length === 0) {
+        showAlert('mechanicAlert', 'Please select at least one specialty', 'danger');
+        return;
+      }
+      
+      try {
+        const response = await fetch(`/api/mechanics/${mechanicId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            specialties,
+            experience: parseInt(experience, 10),
+            rating: parseFloat(rating),
+            isAvailable
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showAlert('mechanicAlert', 'Mechanic updated successfully!', 'success');
+          mechanicData = data.data;
+          updateMechanicDetails(mechanicData);
+          
+          document.getElementById('mechanicEditForm').classList.add('d-none');
+          document.getElementById('mechanicDetails').classList.remove('d-none');
+        } else {
+          showAlert('mechanicAlert', data.message || 'Failed to update mechanic', 'danger');
+        }
+      } catch (error) {
+        console.error('Update mechanic error:', error);
+        showAlert('mechanicAlert', 'An error occurred while updating the mechanic', 'danger');
+      }
+    });
+    
+    // Toggle availability status
+    document.getElementById('toggleStatusBtn').addEventListener('click', async () => {
+      try {
+        const response = await fetch(`/api/mechanics/${mechanicId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            isAvailable: !mechanicData.isAvailable,
+            specialties: mechanicData.specialties,
+            experience: mechanicData.experience,
+            rating: mechanicData.rating
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          mechanicData = data.data;
+          updateMechanicDetails(mechanicData);
+          showAlert('mechanicAlert', `Mechanic is now ${mechanicData.isAvailable ? 'available' : 'unavailable'}`, 'success');
+        } else {
+          showAlert('mechanicAlert', data.message || 'Failed to update status', 'danger');
+        }
+      } catch (error) {
+        console.error('Update status error:', error);
+        showAlert('mechanicAlert', 'An error occurred while updating the status', 'danger');
+      }
+    });
+    
+    async function loadMechanicDetails() {
+      try {
+        const response = await fetch(`/api/mechanics/${mechanicId}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('mechanicLoading').classList.add('d-none');
+        
+        if (data.success) {
+          mechanicData = data.data;
+          updateMechanicDetails(mechanicData);
+          document.getElementById('mechanicDetails').classList.remove('d-none');
+        } else {
+          document.getElementById('mechanicNotFound').classList.remove('d-none');
+        }
+      } catch (error) {
+        console.error('Load mechanic error:', error);
+        showAlert('mechanicAlert', 'An error occurred while loading mechanic details', 'danger');
+        document.getElementById('mechanicLoading').classList.add('d-none');
+      }
+    }
+    
+    function updateMechanicDetails(mechanic) {
+      document.getElementById('mechanicName').textContent = mechanic.user ? mechanic.user.name : 'Mechanic Details';
+      document.getElementById('detailName').textContent = mechanic.user ? mechanic.user.name : 'N/A';
+      document.getElementById('detailEmail').textContent = mechanic.user ? mechanic.user.email : 'N/A';
+      document.getElementById('detailSpecialties').textContent = mechanic.specialties.join(', ');
+      document.getElementById('detailExperience').textContent = mechanic.experience;
+      document.getElementById('detailRating').textContent = mechanic.rating;
+      
+      const statusBadge = document.getElementById('detailStatus');
+      statusBadge.textContent = mechanic.isAvailable ? 'Available' : 'Unavailable';
+      statusBadge.className = `badge ${mechanic.isAvailable ? 'bg-success' : 'bg-danger'}`;
+      
+      const toggleBtn = document.getElementById('toggleStatusBtn');
+      toggleBtn.textContent = mechanic.isAvailable ? 'Mark Unavailable' : 'Mark Available';
+      toggleBtn.className = `btn btn-sm ${mechanic.isAvailable ? 'btn-outline-danger' : 'btn-outline-success'} ms-2`;
+    }
+    
+    async function loadMechanicJobs() {
+      try {
+        // Get current date
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const response = await fetch(`/api/jobs?mechanicId=${mechanicId}&startDate=${today.toISOString()}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        document.getElementById('jobsLoading').classList.add('d-none');
+        document.getElementById('mechanicJobs').classList.remove('d-none');
+        
+        if (data.success && data.data.length > 0) {
+          const jobsList = document.getElementById('jobsList');
+          jobsList.innerHTML = '';
+          
+          data.data.forEach(job => {
+            const startTime = new Date(job.startTime);
+            const endTime = new Date(job.endTime);
+            
+            const jobItem = document.createElement('li');
+            jobItem.className = 'list-group-item';
+            
+            jobItem.innerHTML = `
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 class="mb-1">${job.serviceType}</h5>
+                  <p class="mb-1">${job.customer.name}</p>
+                  <small>${formatDate(startTime)} ${formatTime(startTime)} - ${formatTime(endTime)}</small>
+                </div>
+                <a href="/jobs/${job._id}" class="btn btn-sm btn-info">View</a>
+              </div>
+            `;
+            
+            jobsList.appendChild(jobItem);
+          });
+        } else {
+          document.getElementById('noJobs').classList.remove('d-none');
+        }
+      } catch (error) {
+        console.error('Load jobs error:', error);
+        document.getElementById('jobsLoading').classList.add('d-none');
+      }
+    }
+    
+    function formatDate(date) {
+      return date.toLocaleDateString('en-US', { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      });
+    }
+    
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      });
+    }
+    
+    function showAlert(elementId, message, type) {
+      const alertElement = document.getElementById(elementId);
+      if (alertElement) {
+        alertElement.textContent = message;
+        alertElement.className = `alert alert-${type}`;
+        alertElement.classList.remove('d-none');
+        
+        setTimeout(() => {
+          alertElement.classList.add('d-none');
+        }, 5000);
+      }
+    }
+  });
+</script>

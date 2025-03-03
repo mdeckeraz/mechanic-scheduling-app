@@ -1,0 +1,377 @@
+<%- include('partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-12">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/jobs">Jobs</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Schedule New Job</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-md-10">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">Schedule New Job</h2>
+      </div>
+      <div class="card-body">
+        <div id="addJobAlert" class="alert d-none" role="alert"></div>
+        
+        <form id="addJobForm">
+          <h4 class="mb-3">Customer Information</h4>
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="customerName" class="form-label">Customer Name</label>
+                <input type="text" class="form-control" id="customerName" name="customerName" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="customerEmail" class="form-label">Email</label>
+                <input type="email" class="form-control" id="customerEmail" name="customerEmail" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="customerPhone" class="form-label">Phone</label>
+                <input type="tel" class="form-control" id="customerPhone" name="customerPhone" required>
+              </div>
+            </div>
+          </div>
+          
+          <h4 class="mb-3">Vehicle Information</h4>
+          <div class="row mb-4">
+            <div class="col-md-3">
+              <div class="mb-3">
+                <label for="vehicleMake" class="form-label">Make</label>
+                <input type="text" class="form-control" id="vehicleMake" name="vehicleMake" required>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="mb-3">
+                <label for="vehicleModel" class="form-label">Model</label>
+                <input type="text" class="form-control" id="vehicleModel" name="vehicleModel" required>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="mb-3">
+                <label for="vehicleYear" class="form-label">Year</label>
+                <input type="number" class="form-control" id="vehicleYear" name="vehicleYear" min="1900" max="2099" required>
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="mb-3">
+                <label for="vehicleVin" class="form-label">VIN</label>
+                <input type="text" class="form-control" id="vehicleVin" name="vehicleVin" required>
+              </div>
+            </div>
+          </div>
+          
+          <h4 class="mb-3">Service Information</h4>
+          <div class="row mb-4">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="serviceType" class="form-label">Service Type</label>
+                <select class="form-select" id="serviceType" name="serviceType" required>
+                  <option value="">-- Select Service Type --</option>
+                  <option value="Engine Upgrade">Engine Upgrade</option>
+                  <option value="Transmission Upgrade">Transmission Upgrade</option>
+                  <option value="Suspension Upgrade">Suspension Upgrade</option>
+                  <option value="Brake Upgrade">Brake Upgrade</option>
+                  <option value="Exhaust Upgrade">Exhaust Upgrade</option>
+                  <option value="Interior Upgrade">Interior Upgrade</option>
+                  <option value="Exterior Upgrade">Exterior Upgrade</option>
+                  <option value="Performance Tuning">Performance Tuning</option>
+                  <option value="Tire Upgrade">Tire Upgrade</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="jobStatus" class="form-label">Status</label>
+                <select class="form-select" id="jobStatus" name="jobStatus" required>
+                  <option value="Scheduled" selected>Scheduled</option>
+                  <option value="In Progress">In Progress</option>
+                  <option value="Completed">Completed</option>
+                  <option value="Cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+            <div class="col-md-12">
+              <div class="mb-3">
+                <label for="description" class="form-label">Description (Optional)</label>
+                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+              </div>
+            </div>
+          </div>
+          
+          <h4 class="mb-3">Schedule</h4>
+          <div class="row mb-4">
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="jobDate" class="form-label">Date</label>
+                <input type="date" class="form-control" id="jobDate" name="jobDate" required>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="startTime" class="form-label">Start Time</label>
+                <select class="form-select" id="startTime" name="startTime" required>
+                  <option value="">-- Select Start Time --</option>
+                  <!-- Time options will be populated by JavaScript -->
+                </select>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="mb-3">
+                <label for="duration" class="form-label">Duration (hours)</label>
+                <select class="form-select" id="duration" name="duration" required>
+                  <option value="1">1 hour</option>
+                  <option value="2">2 hours</option>
+                  <option value="3">3 hours</option>
+                  <option value="4">4 hours</option>
+                  <option value="5">5 hours</option>
+                  <option value="6">6 hours</option>
+                  <option value="7">7 hours</option>
+                  <option value="8">8 hours</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          
+          <h4 class="mb-3">Mechanic Assignment</h4>
+          <div class="row mb-4">
+            <div class="col-md-12">
+              <div class="mb-3">
+                <label for="mechanicId" class="form-label">Assign Mechanic</label>
+                <select class="form-select" id="mechanicId" name="mechanicId" required>
+                  <option value="">-- Select Mechanic --</option>
+                  <!-- Available mechanics will be populated based on selected time -->
+                </select>
+                <div class="form-text">Only available mechanics for the selected time slot will be shown</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+            <a href="/jobs" class="btn btn-secondary me-md-2">Cancel</a>
+            <button type="submit" class="btn btn-primary">Schedule Job</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+    
+    // Set default date to today
+    const today = new Date();
+    document.getElementById('jobDate').value = today.toISOString().split('T')[0];
+    
+    // Populate time slots
+    populateTimeSlots();
+    
+    // Add event listeners
+    document.getElementById('jobDate').addEventListener('change', checkAvailableMechanics);
+    document.getElementById('startTime').addEventListener('change', checkAvailableMechanics);
+    document.getElementById('duration').addEventListener('change', checkAvailableMechanics);
+    
+    // Handle form submission
+    document.getElementById('addJobForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      // Get form values
+      const customerName = document.getElementById('customerName').value;
+      const customerEmail = document.getElementById('customerEmail').value;
+      const customerPhone = document.getElementById('customerPhone').value;
+      
+      const vehicleMake = document.getElementById('vehicleMake').value;
+      const vehicleModel = document.getElementById('vehicleModel').value;
+      const vehicleYear = document.getElementById('vehicleYear').value;
+      const vehicleVin = document.getElementById('vehicleVin').value;
+      
+      const serviceType = document.getElementById('serviceType').value;
+      const jobStatus = document.getElementById('jobStatus').value;
+      const description = document.getElementById('description').value || '';
+      
+      const jobDate = document.getElementById('jobDate').value;
+      const startTime = document.getElementById('startTime').value;
+      const duration = parseInt(document.getElementById('duration').value, 10);
+      
+      const mechanicId = document.getElementById('mechanicId').value;
+      
+      // Validate time slot
+      if (!startTime) {
+        showAlert('addJobAlert', 'Please select a start time', 'danger');
+        return;
+      }
+      
+      // Calculate start and end times
+      const [hours, minutes] = startTime.split(':').map(Number);
+      const startDateTime = new Date(jobDate);
+      startDateTime.setHours(hours, minutes, 0, 0);
+      
+      const endDateTime = new Date(startDateTime);
+      endDateTime.setHours(endDateTime.getHours() + duration);
+      
+      // Check if mechanic is selected
+      if (!mechanicId) {
+        showAlert('addJobAlert', 'Please select a mechanic', 'danger');
+        return;
+      }
+      
+      try {
+        const response = await fetch('/api/jobs', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            customer: {
+              name: customerName,
+              email: customerEmail,
+              phone: customerPhone
+            },
+            vehicle: {
+              make: vehicleMake,
+              model: vehicleModel,
+              year: parseInt(vehicleYear, 10),
+              vin: vehicleVin
+            },
+            serviceType,
+            status: jobStatus,
+            description,
+            startTime: startDateTime.toISOString(),
+            endTime: endDateTime.toISOString(),
+            mechanicId
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          showAlert('addJobAlert', 'Job scheduled successfully!', 'success');
+          
+          // Reset form or redirect
+          setTimeout(() => {
+            window.location.href = '/jobs';
+          }, 2000);
+        } else {
+          showAlert('addJobAlert', data.message || 'Failed to schedule job', 'danger');
+        }
+      } catch (error) {
+        console.error('Schedule job error:', error);
+        showAlert('addJobAlert', 'An error occurred while scheduling the job', 'danger');
+      }
+    });
+    
+    function populateTimeSlots() {
+      const startTimeSelect = document.getElementById('startTime');
+      startTimeSelect.innerHTML = '<option value="">-- Select Start Time --</option>';
+      
+      // Business hours: 8 AM to 7 PM (last appointment at 6 PM for 1-hour job)
+      for (let hour = 8; hour <= 18; hour++) {
+        // Add full hour
+        const hourValue = `${hour.toString().padStart(2, '0')}:00`;
+        const hourLabel = formatTimeLabel(hour, 0);
+        const hourOption = document.createElement('option');
+        hourOption.value = hourValue;
+        hourOption.textContent = hourLabel;
+        startTimeSelect.appendChild(hourOption);
+        
+        // Add half hour
+        const halfHourValue = `${hour.toString().padStart(2, '0')}:30`;
+        const halfHourLabel = formatTimeLabel(hour, 30);
+        const halfHourOption = document.createElement('option');
+        halfHourOption.value = halfHourValue;
+        halfHourOption.textContent = halfHourLabel;
+        startTimeSelect.appendChild(halfHourOption);
+      }
+    }
+    
+    function formatTimeLabel(hours, minutes) {
+      const period = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+      return `${displayHours}:${minutes.toString().padStart(2, '0')} ${period}`;
+    }
+    
+    async function checkAvailableMechanics() {
+      const jobDate = document.getElementById('jobDate').value;
+      const startTime = document.getElementById('startTime').value;
+      const duration = document.getElementById('duration').value;
+      const mechanicSelect = document.getElementById('mechanicId');
+      
+      // Reset mechanic select
+      mechanicSelect.innerHTML = '<option value="">-- Select Mechanic --</option>';
+      
+      if (!jobDate || !startTime || !duration) {
+        return;
+      }
+      
+      // Calculate start and end times
+      const [hours, minutes] = startTime.split(':').map(Number);
+      const startDateTime = new Date(jobDate);
+      startDateTime.setHours(hours, minutes, 0, 0);
+      
+      const endDateTime = new Date(startDateTime);
+      endDateTime.setHours(endDateTime.getHours() + parseInt(duration, 10));
+      
+      try {
+        const response = await fetch(`/api/mechanics/available?startTime=${startDateTime.toISOString()}&endTime=${endDateTime.toISOString()}`, {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success && data.data.length > 0) {
+          data.data.forEach(mechanic => {
+            const option = document.createElement('option');
+            option.value = mechanic._id;
+            option.textContent = `${mechanic.user.name} - ${mechanic.specialties.join(', ')}`;
+            mechanicSelect.appendChild(option);
+          });
+        } else {
+          const option = document.createElement('option');
+          option.value = '';
+          option.textContent = 'No mechanics available for this time slot';
+          option.disabled = true;
+          mechanicSelect.appendChild(option);
+        }
+      } catch (error) {
+        console.error('Check available mechanics error:', error);
+        showAlert('addJobAlert', 'An error occurred while checking available mechanics', 'danger');
+      }
+    }
+    
+    function showAlert(elementId, message, type) {
+      const alertElement = document.getElementById(elementId);
+      if (alertElement) {
+        alertElement.textContent = message;
+        alertElement.className = `alert alert-${type}`;
+        alertElement.classList.remove('d-none');
+        
+        setTimeout(() => {
+          alertElement.classList.add('d-none');
+        }, 5000);
+      }
+    }
+  });
+</script>

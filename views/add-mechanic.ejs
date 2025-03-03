@@ -1,0 +1,270 @@
+<%- include('partials/header') %>
+
+<div class="row mb-4">
+  <div class="col-md-12">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/mechanics">Mechanics</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Add Mechanic</li>
+      </ol>
+    </nav>
+  </div>
+</div>
+
+<div class="row justify-content-center">
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header bg-primary text-white">
+        <h2 class="mb-0">Add New Mechanic</h2>
+      </div>
+      <div class="card-body">
+        <div id="addMechanicAlert" class="alert d-none" role="alert"></div>
+        
+        <div id="usersLoading" class="text-center">
+          <p>Loading available users...</p>
+        </div>
+        
+        <form id="addMechanicForm" class="d-none">
+          <div class="mb-3">
+            <label for="userId" class="form-label">Select User</label>
+            <select class="form-select" id="userId" name="userId" required>
+              <option value="">-- Select a user --</option>
+              <!-- Users will be loaded here dynamically -->
+            </select>
+            <div class="form-text">Select a user to assign as a mechanic</div>
+          </div>
+          
+          <div class="mb-3">
+            <label class="form-label">Specialties</label>
+            <div class="row">
+              <div class="col-md-4">
+                <div class="form-check">
+                  <input class="form-check-input specialty-checkbox" type="checkbox" value="Engine" id="engineSpecialty">
+                  <label class="form-check-label" for="engineSpecialty">Engine</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input specialty-checkbox" type="checkbox" value="Transmission" id="transmissionSpecialty">
+                  <label class="form-check-label" for="transmissionSpecialty">Transmission</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input specialty-checkbox" type="checkbox" value="Brakes" id="brakesSpecialty">
+                  <label class="form-check-label" for="brakesSpecialty">Brakes</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-check">
+                  <input class="form-check-input specialty-checkbox" type="checkbox" value="Suspension" id="suspensionSpecialty">
+                  <label class="form-check-label" for="suspensionSpecialty">Suspension</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input specialty-checkbox" type="checkbox" value="Electrical" id="electricalSpecialty">
+                  <label class="form-check-label" for="electricalSpecialty">Electrical</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input specialty-checkbox" type="checkbox" value="Body Work" id="bodyWorkSpecialty">
+                  <label class="form-check-label" for="bodyWorkSpecialty">Body Work</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-check">
+                  <input class="form-check-input specialty-checkbox" type="checkbox" value="Interior" id="interiorSpecialty">
+                  <label class="form-check-label" for="interiorSpecialty">Interior</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input specialty-checkbox" type="checkbox" value="Tires" id="tiresSpecialty">
+                  <label class="form-check-label" for="tiresSpecialty">Tires</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input specialty-checkbox" type="checkbox" value="General" id="generalSpecialty" checked>
+                  <label class="form-check-label" for="generalSpecialty">General</label>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="experience" class="form-label">Years of Experience</label>
+            <input type="number" class="form-control" id="experience" name="experience" min="0" value="0">
+          </div>
+          
+          <button type="submit" class="btn btn-primary">Add Mechanic</button>
+          <a href="/mechanics" class="btn btn-secondary">Cancel</a>
+        </form>
+        
+        <div id="noUsers" class="d-none">
+          <p class="text-center">No available users found. Please <a href="/register">register new users</a> first.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/footer') %>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      window.location.href = '/login';
+      return;
+    }
+    
+    loadAvailableUsers();
+    
+    // Handle form submission
+    const addMechanicForm = document.getElementById('addMechanicForm');
+    if (addMechanicForm) {
+      addMechanicForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const userId = document.getElementById('userId').value;
+        const specialties = Array.from(document.querySelectorAll('.specialty-checkbox:checked')).map(cb => cb.value);
+        const experience = document.getElementById('experience').value;
+        
+        if (!userId) {
+          showAlert('addMechanicAlert', 'Please select a user', 'danger');
+          return;
+        }
+        
+        if (specialties.length === 0) {
+          showAlert('addMechanicAlert', 'Please select at least one specialty', 'danger');
+          return;
+        }
+        
+        try {
+          const response = await fetch('/api/mechanics', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+              userId,
+              specialties,
+              experience: parseInt(experience, 10)
+            })
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+            showAlert('addMechanicAlert', 'Mechanic added successfully!', 'success');
+            
+            // Reset form
+            document.getElementById('userId').value = '';
+            document.querySelectorAll('.specialty-checkbox').forEach(cb => {
+              cb.checked = cb.value === 'General';
+            });
+            document.getElementById('experience').value = '0';
+            
+            // Redirect after 2 seconds
+            setTimeout(() => {
+              window.location.href = '/mechanics';
+            }, 2000);
+          } else {
+            showAlert('addMechanicAlert', data.message || 'Failed to add mechanic', 'danger');
+          }
+        } catch (error) {
+          console.error('Add mechanic error:', error);
+          showAlert('addMechanicAlert', 'An error occurred while adding the mechanic', 'danger');
+        }
+      });
+    }
+    
+    async function loadAvailableUsers() {
+      try {
+        // First, get all existing mechanics to exclude their users
+        const mechanicsResponse = await fetch('/api/mechanics', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        const mechanicsData = await mechanicsResponse.json();
+        const existingUserIds = mechanicsData.success ? 
+          mechanicsData.data.map(mechanic => mechanic.user._id) : [];
+        
+        // Then, get all users
+        const usersResponse = await fetch('/api/auth/users', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        
+        if (!usersResponse.ok) {
+          // If the endpoint doesn't exist, we'll simulate it with the current user
+          const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+          
+          if (currentUser && currentUser.id && !existingUserIds.includes(currentUser.id)) {
+            populateUserSelect([currentUser]);
+          } else {
+            showNoUsers();
+          }
+          return;
+        }
+        
+        const usersData = await usersResponse.json();
+        
+        document.getElementById('usersLoading').classList.add('d-none');
+        
+        if (usersData.success && usersData.data.length > 0) {
+          // Filter out users who are already mechanics
+          const availableUsers = usersData.data.filter(user => 
+            !existingUserIds.includes(user._id || user.id)
+          );
+          
+          if (availableUsers.length > 0) {
+            populateUserSelect(availableUsers);
+          } else {
+            showNoUsers();
+          }
+        } else {
+          showNoUsers();
+        }
+      } catch (error) {
+        console.error('Load users error:', error);
+        
+        // If there's an error, try to use the current user as a fallback
+        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+        
+        if (currentUser && currentUser.id) {
+          populateUserSelect([currentUser]);
+        } else {
+          showNoUsers();
+        }
+      }
+    }
+    
+    function populateUserSelect(users) {
+      const userSelect = document.getElementById('userId');
+      
+      users.forEach(user => {
+        const option = document.createElement('option');
+        option.value = user._id || user.id;
+        option.textContent = `${user.name} (${user.email})`;
+        userSelect.appendChild(option);
+      });
+      
+      document.getElementById('addMechanicForm').classList.remove('d-none');
+    }
+    
+    function showNoUsers() {
+      document.getElementById('noUsers').classList.remove('d-none');
+    }
+    
+    function showAlert(elementId, message, type) {
+      const alertElement = document.getElementById(elementId);
+      if (alertElement) {
+        alertElement.textContent = message;
+        alertElement.className = `alert alert-${type}`;
+        alertElement.classList.remove('d-none');
+        
+        setTimeout(() => {
+          alertElement.classList.add('d-none');
+        }, 5000);
+      }
+    }
+  });
+</script>
